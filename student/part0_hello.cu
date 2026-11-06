@@ -10,7 +10,8 @@
 // TASK 0: Given an image and its size, write this thread's pixel.
 // 1. Find x and y using Equation 1.
 // 2. Ignore threads outside the image.
-// 3. Store red = x/(w-1), green = y/(h-1), blue = 0.25.
+// 3. Store x / (float)(w - 1), y / (float)(h - 1), 0.25f.
+// Cast to float: integer division would turn most pixels black.
 // Check: make check [0]
 // You can use: CUDA indices from gpu.h need no declaration; Color=vec3 from vec3.h.
 // What it does: Colours one pixel with the red/green gradient.
@@ -19,6 +20,11 @@
 // Returns: Nothing (void); writes img[y*w+x]; out-of-image threads write nothing.
 // Example: w=4, h=3, pixel (2,1) -> img[6] = (2/3, 1/2, 0.25).
 __global__ void gradient_kernel(Color* img, int w, int h) {
-    task_not_done("0");
-    return;
+    // TODO (0): Find global x: block number times block width plus local x.
+    int x = task_blank<int>("0");
+    // TODO (0): Find global y in the same way.
+    int y = task_blank<int>("0");
+    if (x >= w || y >= h) return; // Given bounds check.
+    // TODO (0): Use x / (float)(w - 1), y / (float)(h - 1), and 0.25f.
+    img[y * w + x] = task_blank<Color>("0");
 }

@@ -17,8 +17,8 @@
 // Returns: Signed distance: positive outside, zero on the sphere, negative inside.
 // Example: sdf_sphere((3,0,0),1) -> 2; ((0.5,0,0),1) -> -0.5.
 HD float sdf_sphere(vec3 p, float r) {
-    task_not_done("1a");
-    return 1.0f;
+    // TODO (1a): Distance to centre minus radius; length(p) is given.
+    return task_blank<float>("1a");
 }
 
 // Follow rays to turn the sphere distance into a visible white ball.
@@ -36,9 +36,21 @@ HD float sdf_sphere(vec3 p, float r) {
 // Also writes *steps on every exit.
 // Example: Unit-ball mode: ro=(0,0,5), rd=(0,0,-1), k=0.2 -> t=4, *steps=2.
 HD float sphere_trace(vec3 ro, vec3 rd, float k, int* steps) {
-    task_not_done("1b");
+    float t = 0;
     *steps = 0;
-    return -1.0f;
+    for (int i = 0; i < MAX_STEPS; ++i) {
+        // TODO (1b): Point at distance t along the ray: ro + t * rd.
+        vec3 p = task_blank<vec3>("1b");
+        // TODO (1b): Ask current_scene(p, k) how far the surface is.
+        float distance = task_blank<float>("1b");
+        *steps = i + 1; // Count this sample, including an immediate hit.
+        // TODO (1b): Touching means distance < HIT_EPS.
+        if (task_blank<bool>("1b")) return t;
+        // TODO (1b): Move forward by distance.
+        t += task_blank<float>("1b");
+        if (t > MAX_DIST) break;
+    }
+    return -1;
 }
 
 // Light needs a surface normal to make the white ball look round.
@@ -51,10 +63,18 @@ HD float sphere_trace(vec3 ro, vec3 rd, float k, int* steps) {
 // What it does: Samples the current field six times to find which way its surface faces.
 // Gets: vec3 p: World point on the surface; float k: Pass to current_scene unchanged.
 // Returns: Unit outward vec3 normal; (0,0,0) if all three differences are zero.
-// Example: Scene floor: sdf_normal((5,-0.8,5),0.2) -> (0,1,0).
+// Example: Ball before 1e: sdf_normal((0,1,0),0.2) -> (0,1,0).
+// After 1e, scene floor: sdf_normal((5,-0.8,5),0.2) -> (0,1,0).
 HD vec3 sdf_normal(vec3 p, float k) {
-    task_not_done("1c");
-    return {0, 0, 0};
+    const float h = 0.001f;
+    // TODO (1c): Subtract scene samples at p + {h,0,0} and p - {h,0,0}; pass k.
+    float dx = task_blank<float>("1c");
+    // TODO (1c): Repeat for y with {0,h,0}.
+    float dy = task_blank<float>("1c");
+    // TODO (1c): Repeat for z with {0,0,h}.
+    float dz = task_blank<float>("1c");
+    // TODO (1c): Return normalize(vec3{dx, dy, dz}).
+    return task_blank<vec3>("1c");
 }
 // Combine distances so the final scene can contain several shapes.
 // TASK 1d: Given two distances, return their union distance.
@@ -67,8 +87,8 @@ HD vec3 sdf_normal(vec3 p, float k) {
 // Returns: Union field min(a,b): negative inside, zero on boundary, positive outside.
 // Example: op_union(-1,2) -> -1.
 HD float op_union(float a, float b) {
-    task_not_done("1d");
-    return 1.0f;
+    // TODO (1d): Keep the smaller field value with min(a, b).
+    return task_blank<float>("1d");
 }
 
 // TASK 1d: Given distances to A and B, return the distance to A minus B.
@@ -82,13 +102,12 @@ HD float op_union(float a, float b) {
 //   outside.
 // Example: op_subtract(-1,-2) -> 2 (point removed).
 HD float op_subtract(float a, float b) {
-    task_not_done("1d");
-    return 1.0f;
+    // TODO (1d): Keep max(a, -b) to cut B out of A.
+    return task_blank<float>("1d");
 }
 
-// TASK 1d: Given two distances and blend width k, return smooth union.
+// GIVEN: Smooth union; no blanks. Change k in Task 1e to play with the joint.
 // 1. For k <= 0 use union. 2. Compute h. 3. Mix and subtract k*h*(1-h).
-// Check: make check [1d]
 // You can use: vec3.h: clamp(x,0,1), mix(b,a,h); your op_union(a,b).
 // What it does: Joins two fields with a rounded blend where the shapes meet.
 // Gets: float a: Signed field value for shape A at the point; float b: Signed field value for shape B
@@ -97,8 +116,9 @@ HD float op_subtract(float a, float b) {
 //   min(a,b).
 // Example: a=0.1, b=0.2, k=0.3 -> 0.066667; k=0 -> 0.1.
 HD float op_smooth_union(float a, float b, float k) {
-    task_not_done("1d");
-    return 1.0f;
+    if (k <= 0) return op_union(a, b);
+    float h = clamp(0.5f + 0.5f * (b - a) / k, 0, 1);
+    return mix(b, a, h) - k * h * (1 - h);
 }
 
 // Assemble the shapes to replace the ball with the full scene.
@@ -116,7 +136,11 @@ HD float op_smooth_union(float a, float b, float k) {
 //   blends.
 // Example: scene_sdf((0,1.15,0),0.2) -> -0.5 (inside the top ball).
 HD float scene_sdf(vec3 p, float k) {
-    task_not_done("1e");
-    return 1.0f;
+    // TODO (1e): Subtract the unit sphere from sdf_box(p, {0.8f,0.8f,0.8f}).
+    float holes = task_blank<float>("1e");
+    // TODO (1e): Sphere at p - vec3{0,1.15f,0}, radius 0.5f.
+    float top = task_blank<float>("1e");
+    // TODO (1e): Smooth-union holes and top with k, then union floor p.y + 0.8f.
+    return task_blank<float>("1e");
 }
 

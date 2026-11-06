@@ -20,8 +20,14 @@
 //   d=0.
 // Example: Corners (0,0,0),(1,0,0),(0,1,0) -> normal=(0,0,1), d=0.
 Plane triangle_plane(vec3 p0, vec3 p1, vec3 p2) {
-    task_not_done("2a");
-    return {};
+    // TODO (2a): Cross edges p1 - p0 and p2 - p0.
+    vec3 normal = task_blank<vec3>("2a");
+    if (length(normal) < 1e-12f) return {}; // Almost a line: no usable plane.
+    // TODO (2a): Normalize the perpendicular direction.
+    normal = task_blank<vec3>("2a");
+    // TODO (2a): Offset is -dot(normal, p0).
+    double d = task_blank<double>("2a");
+    return {normal, d};
 }
 
 // TASK 2b: Given Q and two edge ends, write *best and return its cost.
@@ -37,9 +43,14 @@ Plane triangle_plane(vec3 p0, vec3 p1, vec3 p2) {
 //   tie is valid.
 // Example: Q for x=0,y=0,z=0; ends (-1,0,0),(1,0,0) -> cost=0, *best=(0,0,0).
 double collapse_cost(const Quadric& Q, vec3 v1, vec3 v2, vec3* best) {
-    task_not_done("2b");
-    *best = (v1 + v2) * 0.5f;
-    return 0.0;
+    vec3 midpoint = (v1 + v2) * 0.5f; // Given average of the endpoints.
+    *best = v1;
+    for (vec3 position : {v2, midpoint}) {
+        // TODO (2b): Is evaluate(Q, position) smaller than evaluate(Q, *best)?
+        if (task_blank<bool>("2b")) *best = position;
+    }
+    // TODO (2b): Return evaluate(Q, *best), the winning cost.
+    return task_blank<double>("2b");
 }
 
 // Competition hook (2c, ungraded): gets the mesh, edge and new position.

@@ -31,6 +31,10 @@ int main(int argc,char** argv) { try {
     mesh_row("Input",stats(input)); mesh_row("Output",stats(result)); row("Collapses",counts.done); row("Rejected link",counts.link); row("Rejected normal flip",counts.flip); row("Rejected degenerate",counts.degenerate); row("Simplify ms",ms); row("Saved",out);
     // The assignment metric is displayed, then the independent competition verdict.
     auto a=one_sided(input,result,20000),b=one_sided(result,input,20000); auto d=two_sided(a,b); double diag=bbox_diagonal(input);
+    if (unfinished.count("3a")) {
+        row("Part III error", "(Part III not done yet)");
+    } else {
     row("Part III Hausdorff",d.maximum); row("Part III Hausdorff %",100*d.maximum/diag); row("Part III mean",d.mean); row("Part III mean %",100*d.mean/diag);
+    }
     auto v=judge_mesh(input,result); print_verdict(v); print_tasks(); return 0;
 } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; return 1; } }
