@@ -10,9 +10,8 @@ HD float op_union(float,float);
 HD float op_subtract(float,float);
 HD float op_smooth_union(float,float,float);
 HD float scene_sdf(vec3,float);
-// current_scene(p,k) draws your ball before 1e, your scene after.
+// current_scene(p,k) draws your ball before 1d, your scene after.
 void set_trace_ball(bool);
 HD float current_scene(vec3,float);
 HD float sphere_trace(vec3,vec3,float,int*);
-HD vec3 sdf_normal(vec3,float);
 __global__ void distance_kernel(const vec3*,int,const vec3*,int,float*,float*);

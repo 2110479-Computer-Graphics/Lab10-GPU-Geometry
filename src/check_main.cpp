@@ -29,28 +29,15 @@ int main(int argc, char** argv) { try {
     test("1b",near(hit,4,.0011) && miss==-1 && steps>0 && miss_steps>0,
          "unit ball ray expected 4, returned "+std::to_string(hit),
          "Sample the given current_scene; advance t by d and write steps on every exit.");
-    vec3 normal=sdf_normal({0,1,0},.2f);
-    test("1c",near(normal.x,0) && near(normal.y,1) && near(normal.z,0),"ball normal expected (0,1,0), returned ("+std::to_string(normal.x)+","+std::to_string(normal.y)+","+std::to_string(normal.z)+")","Take central differences along each axis; normalize the resulting gradient.");
     set_trace_ball(false);
     float smooth=op_smooth_union(.1f,.2f,.3f);
     bool booleans=near(op_union(-1,2),-1) && near(op_subtract(-1,-2),2) && smooth<.1f && near(smooth,.06666667f) && near(op_smooth_union(0,2,.3f),0) && near(op_smooth_union(-1,2,0),-1);
-    test("1d",booleans,"union/subtraction/blend mismatch; blend expected .066667, returned "+std::to_string(smooth),"Union uses min, subtraction uses max(a,-b); guard k<=0.");
+    test("1c",booleans,"union/subtraction/blend mismatch; blend expected .066667, returned "+std::to_string(smooth),"Union uses min(a,b); subtraction uses max(a,-b). Smooth union is given.");
     int floor_steps;
     float floor_hit=sphere_trace({5,3.2f,5},{0,-1,0},.2f,&floor_steps);
     vec3 floor_normal=sdf_normal({5,-.8f,5},.2f);
     float scene[3]={scene_sdf({0,0,0},.2f),scene_sdf({0,1.15f,0},.2f),scene_sdf({5,-.8f,5},.2f)};
-    test("1e",near(floor_hit,4,.0011) && floor_steps>0 && length(floor_normal-vec3{0,1,0})<.001f && near(scene[0],.65f) && near(scene[1],-.5f) && near(scene[2],0) && near(scene_sdf({1,1,1},.2f),sqrt(3.)*.2) && near(scene_sdf({.75f,.75f,.75f},.2f),-.05),"scene (origin, top, floor) expected (.65,-.5,0), returned ("+std::to_string(scene[0])+","+std::to_string(scene[1])+","+std::to_string(scene[2])+")","Call the given sdf_box(p,{0.8f,0.8f,0.8f}), cut it with the origin sphere, blend the top sphere, then union the floor. Check the box corner and inside too.");
-    Plane plane=triangle_plane({0,0,2},{2,0,2},{0,3,2});
-    Plane tilted=triangle_plane({.2f,.7f,-.4f},{1.3f,-.2f,.8f},{-.3f,.5f,1.2f});
-    bool planes=length(plane.normal-vec3{0,0,1})<1e-6 && near(plane.d,-2);
-    planes=planes && near(length(tilted.normal),1) &&
-        near(dot(tilted.normal,{.2f,.7f,-.4f})+tilted.d,0) &&
-        near(dot(tilted.normal,{1.3f,-.2f,.8f})+tilted.d,0) &&
-        near(dot(tilted.normal,{-.3f,.5f,1.2f})+tilted.d,0);
-    Plane zero=triangle_plane({},{},{1,0,0});
-    planes=planes && length(zero.normal)==0 && zero.d==0;
-    test("2a",planes,"plane z=2 expected normal (0,0,1), d=-2; returned d="+std::to_string(plane.d),
-         "Normalize cross(p1-p0,p2-p0), then d=-dot(normal,p0). Return {} for a zero-area triangle.");
+    test("1d",near(floor_hit,4,.0011) && floor_steps>0 && length(floor_normal-vec3{0,1,0})<.001f && near(scene[0],.65f) && near(scene[1],-.5f) && near(scene[2],0) && near(scene_sdf({1,1,1},.2f),sqrt(3.)*.2) && near(scene_sdf({.75f,.75f,.75f},.2f),-.05),"scene (origin, top, floor) expected (.65,-.5,0), returned ("+std::to_string(scene[0])+","+std::to_string(scene[1])+","+std::to_string(scene[2])+")","Call the given sdf_box(p,{0.8f,0.8f,0.8f}), cut it with the origin sphere, blend the top sphere, then union the floor. Check the box corner and inside too.");
     // Each candidate must win a case. An unrestricted optimum must not replace them.
     Quadric q=outer(0,0,1,0); vec3 best;
     double cost=collapse_cost(q,{0,0,1},{0,0,2},&best);
@@ -63,7 +50,7 @@ int main(int argc, char** argv) { try {
     Quadric shifted=outer(1,0,0,-.2)+outer(0,1,0,0)+outer(0,0,1,0);
     cost=collapse_cost(shifted,{0,0,0},{1,0,0},&best);
     candidates=candidates && near(cost,.04) && length(best)<1e-6;
-    test("2b",candidates,"endpoint/midpoint selection or returned cost mismatch",
+    test("2a",candidates,"endpoint/midpoint selection or returned cost mismatch",
          "Evaluate v1, v2 and (v1+v2)*0.5; write the cheapest to *best and return its evaluated cost.");
     // 259 points force two blocks. Padding catches threads that ignore n_points.
     std::vector<vec3> points(512,{.2f,.2f,100}); for(int i=0;i<259;++i) points[i]={.2f,.2f,0}; points[0]={.2f,.2f,1}; points[1]={.2f,.2f,2}; points[258]={.2f,.2f,3};

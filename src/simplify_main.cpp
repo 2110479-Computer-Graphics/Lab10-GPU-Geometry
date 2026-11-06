@@ -11,17 +11,17 @@ int main(int argc,char** argv) { try {
     Cli cli(argc,argv); panel("simplify");
     if(cli.has("--probe")) {
         Plane plane=triangle_plane({0,0,0},{1,0,0},{0,1,0});
-        row("[2a] plane normal",std::to_string(plane.normal.x)+","+std::to_string(plane.normal.y)+","+std::to_string(plane.normal.z));
-        row("[2a] plane d",plane.d);
+        row("[given] plane normal",std::to_string(plane.normal.x)+","+std::to_string(plane.normal.y)+","+std::to_string(plane.normal.z));
+        row("[given] plane d",plane.d);
         auto q=plane_quadric({0,0,0},{1,0,0},{0,1,0});
         std::cout<<"evaluate(Q,(0,0,2)) = "<<evaluate(q,{0,0,2})<<" (expected 4)\n";
         Plane shifted=triangle_plane({0,0,2},{2,0,2},{0,3,2});
-        row("[2a] z=2 plane d",shifted.d);
+        row("[given] z=2 plane d",shifted.d);
         Quadric corner = outer(1,0,0,0) + outer(0,1,0,0) + outer(0,0,1,0);
         vec3 p;
         double cost=collapse_cost(corner,{-1,0,0},{1,0,0},&p);
-        row("[2b] Corner best",std::to_string(p.x)+","+std::to_string(p.y)+","+std::to_string(p.z));
-        row("[2b] Corner cost",cost);
+        row("[2a] Corner best",std::to_string(p.x)+","+std::to_string(p.y)+","+std::to_string(p.z));
+        row("[2a] Corner cost",cost);
         print_tasks(); return 0;
     }
     int target=cli.integer("--target",1000); positive(target,"Target"); auto input=read_obj(cli.get("--in","data/part.obj"));

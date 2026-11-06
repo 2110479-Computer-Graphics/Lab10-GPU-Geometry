@@ -34,16 +34,17 @@ int main(int argc,char** argv) { try {
     float k=std::stof(cli.get("--k","0.2")); auto mode=cli.get("--mode","shade"); if(mode!="shade" && mode!="steps" && mode!="normal") throw std::runtime_error("Unknown mode"); int m=mode=="steps"?1:mode=="normal"?2:0;
     // Exercise every task on the host before the device launch.
     sdf_sphere({},1); sdf_box({},{1,1,1}); op_union(0,1); op_intersect(0,1); op_subtract(0,1); op_smooth_union(0,1,k); scene_sdf({},k); int probe; sphere_trace({0,0,5},{0,0,-1},k,&probe); sdf_normal({},k);
-    bool ball = unfinished.count("1e") != 0;
-    bool flat = unfinished.count("1c") != 0;
+    bool ball = unfinished.count("1d") != 0;
+    bool flat = false; // Surface normal and lighting are given.
+    bool ready = !unfinished.count("1a") && !unfinished.count("1b");
     // TA-only switches reproduce the intermediate reference pictures.
     if (cli.has("--force-ball")) ball = true;
     if (cli.has("--force-flat")) flat = true;
     set_trace_ball(ball);
-    row("drawing", std::string(ball ? "one ball (1e not done yet)" : "full scene") +
-        (flat ? ", flat white (1c not done yet)" : ", lit with normals"));
+    row("drawing", !ready ? "sky (finish 1a and 1b first)" : std::string(ball ? "one ball (1d not done yet)" : "full scene") +
+        (flat ? ", flat white (TA preview)" : ", lit with normals"));
     std::vector<Pixel> host(size_t(w)*h); auto* dev=gpu_alloc<Pixel>(host.size()); dim3 block(16,16),grid((w+15)/16,(h+15)/16);
-    Timer timer; LAUNCH(render_kernel,grid,block,dev,w,h,k,m,flat); double ms=timer.kernel_ms(); from_gpu(host.data(),dev,host.size()); gpu_free(dev);
+    Timer timer; LAUNCH(render_kernel,grid,block,dev,w,h,k,m,flat,ready); double ms=timer.kernel_ms(); from_gpu(host.data(),dev,host.size()); gpu_free(dev);
     std::vector<Color> image(host.size()); double sum=0,hits=0; int mx=0;
     for(size_t i=0;i<host.size();++i) { image[i]=host[i].color; sum+=host[i].steps; mx=std::max(mx,host[i].steps); hits+=host[i].hit; }
     if (m == 1 && w >= 160 && h >= 60) {
@@ -67,7 +68,7 @@ int main(int argc,char** argv) { try {
         double times[2]; std::vector<Pixel> cpu(host.size());
         for(int pass=0;pass<2;++pass) {
             Timer ct; unsigned nt=pass?std::max(1u,std::thread::hardware_concurrency()):1;
-            auto loop=[&](unsigned id) { for(int y=id;y<h;y+=nt) for(int x=0;x<w;++x) cpu[y*w+x]=trace_pixel(x,y,w,h,k,m,flat); };
+            auto loop=[&](unsigned id) { for(int y=id;y<h;y+=nt) for(int x=0;x<w;++x) cpu[y*w+x]=trace_pixel(x,y,w,h,k,m,flat,ready); };
             if(!pass) loop(0); else { std::vector<std::thread> ts; for(unsigned id=0;id<nt;++id) ts.emplace_back(loop,id); for(auto& t:ts) t.join(); }
             times[pass]=ct.ms(); double error=0; for(size_t i=0;i<cpu.size();++i) error=std::max(error,(double)length(cpu[i].color-host[i].color));
             row(pass?"CPU multi ms":"CPU single ms",times[pass]); row("Max color difference",error);
@@ -82,7 +83,7 @@ int main(int argc,char** argv) { try {
     std::string reference;
     if (w == 960 && h == 540 && unfinished.count("1a") == 0 && unfinished.count("1b") == 0) {
         if (ball || flat) {
-            if (ball && m == 0) reference = flat ? "reference/steps/1b.png" : "reference/steps/1c.png";
+            if (ball && m == 0) reference = flat ? "reference/steps/white_ball.png" : "reference/steps/1b.png";
         } else {
         if (k == 0.2f) {
             reference = m == 1 ? "reference/trace_steps.png" :

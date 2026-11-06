@@ -70,8 +70,15 @@ struct Plane {
     vec3 normal{};
     double d = 0;
 };
-Plane triangle_plane(vec3, vec3, vec3);
-// Given: turn the student's plane into the internal quadric.
+// Given: find a unit plane from two edges; ignore degenerate triangles.
+inline Plane triangle_plane(vec3 p0, vec3 p1, vec3 p2) {
+    vec3 normal = cross(p1 - p0, p2 - p0);
+    if (length(normal) < 1e-12f) return {};
+    normal = normalize(normal);
+    double d = -dot(normal, p0);
+    return {normal, d};
+}
+// Given: turn the given plane into the internal quadric.
 inline Quadric plane_quadric(vec3 p0, vec3 p1, vec3 p2) {
     Plane plane = triangle_plane(p0, p1, p2);
     return outer(plane.normal.x, plane.normal.y, plane.normal.z, plane.d);

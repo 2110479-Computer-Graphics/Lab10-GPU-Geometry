@@ -1,6 +1,7 @@
 #include "../src/core/judge_metric.h"
 #include "../src/core/distance.h"
 #include "../src/core/tasks.h"
+#include "../src/core/student.h"
 #include "../src/core/quadric.h"
 #include <iostream>
 #include <random>
@@ -8,6 +9,20 @@
 static void require(bool ok,const char* text){if(!ok)throw std::runtime_error(text);std::cout<<"OK: "<<text<<'\n';}
 __global__ void atomic_test(int* sum){atomic_add_int(sum,1);}
 int main()try{
+  if (fabs(sdf_sphere({3,0,0},1)-2)<1e-6) {
+    set_trace_ball(true);
+    require(length(sdf_normal({0,1,0},.2f)-vec3{0,1,0})<1e-5,"given ball normal points outward");
+    set_trace_ball(false);
+  }
+  auto horizontal=triangle_plane({0,0,2},{2,0,2},{0,3,2});
+  auto tilted=triangle_plane({.2f,.7f,-.4f},{1.3f,-.2f,.8f},{-.3f,.5f,1.2f});
+  require(length(horizontal.normal-vec3{0,0,1})<1e-6 && fabs(horizontal.d+2)<1e-6,
+          "given triangle plane has unit normal and offset");
+  require(fabs(length(tilted.normal)-1)<1e-6 && fabs(dot(tilted.normal,{.2f,.7f,-.4f})+tilted.d)<1e-6,
+          "given tilted plane contains its corner");
+  auto degenerate=triangle_plane({},{},{1,0,0});
+  require(length(degenerate.normal)==0 && degenerate.d==0,"given degenerate plane is zero");
+
   double matrix[3][3]={{2,1,-1},{-3,-1,2},{-2,1,2}};
   double rhs[3]={8,-11,-3}, solution[3];
   require(solve3x3(matrix,rhs,solution) && fabs(solution[0]-2)<1e-10 && fabs(solution[1]-3)<1e-10 && fabs(solution[2]+1)<1e-10,"Cramer solve with nonsymmetric matrix");

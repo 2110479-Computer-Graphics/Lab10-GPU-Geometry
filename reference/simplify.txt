@@ -8,7 +8,7 @@ Geometry on the GPU | simplify
   Rejected link             4695
   Rejected normal flip      70607
   Rejected degenerate       55481
-  Simplify ms               896.8886
+  Simplify ms               880.1388
   Saved                     out/simplified.obj
   Part III Hausdorff        0.0090
   Part III Hausdorff %      0.3158
