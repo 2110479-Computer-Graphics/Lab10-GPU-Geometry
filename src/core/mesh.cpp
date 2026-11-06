@@ -6,6 +6,7 @@
 #include <random>
 #include <filesystem>
 #include <numeric>
+#include <algorithm>
 Mesh read_obj(const std::string& path) {
     std::ifstream in(path); if(!in) throw std::runtime_error("Cannot read "+path);
     Mesh m; std::string line,tag;

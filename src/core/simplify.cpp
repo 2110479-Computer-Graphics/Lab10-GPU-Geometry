@@ -1,5 +1,7 @@
 #include "simplify.h"
 #include <queue>
+#include <iterator>
+#include <algorithm>
 #include <set>
 #include <array>
 #include <unordered_map>
