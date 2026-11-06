@@ -33,13 +33,20 @@ void write_obj(const Mesh& m,const std::string& path) {
 MeshStats stats(const Mesh& m) {
     MeshStats s; s.V=(int)m.positions.size(); s.F=(int)m.tris.size();
     std::map<std::pair<int,int>,int> edges;
+    std::map<std::pair<int,int>,int> first_face;
+    std::vector<int> parent(s.F); std::iota(parent.begin(),parent.end(),0);
+    auto root=[&](int f) { while(parent[f]!=f) { parent[f]=parent[parent[f]]; f=parent[f]; } return f; };
     std::vector<std::vector<std::pair<int,int>>> links(s.V);
     std::set<std::vector<int>> faces;
-    for(auto t:m.tris) {
+    for(int f=0;f<s.F;++f) {
+        auto t=m.tris[f];
         int v[3]={t.x,t.y,t.z}; std::vector<int> key={t.x,t.y,t.z}; std::sort(key.begin(),key.end());
         if(!faces.insert(key).second || length(cross(m.positions[t.y]-m.positions[t.x],m.positions[t.z]-m.positions[t.x]))<1e-14f) s.manifold=false;
         for(int i=0;i<3;++i) {
             int a=v[i],b=v[(i+1)%3]; ++edges[std::minmax(a,b)];
+            // Faces connect through shared edges, not merely shared vertices.
+            auto inserted=first_face.emplace(std::minmax(a,b),f);
+            if(!inserted.second) parent[root(f)]=root(inserted.first->second);
             links[a].push_back({b,v[(i+2)%3]});
         }
     }
@@ -55,8 +62,9 @@ MeshStats stats(const Mesh& m) {
         if(seen.size()!=adj.size()) s.manifold=false;
     }
     s.E=(int)edges.size(); s.chi=s.V-s.E+s.F;
+    for(int f=0;f<s.F;++f) if(root(f)==f) ++s.components;
     s.manifold=s.manifold && s.boundary==0 && s.nonmanifold==0;
-    if(s.manifold) s.genus=(2-s.chi)/2.0;
+    if(s.manifold && s.components==1) s.genus=(2-s.chi)/2.0;
     return s;
 }
 double bbox_diagonal(const Mesh& m) {

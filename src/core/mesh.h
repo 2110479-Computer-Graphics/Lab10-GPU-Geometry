@@ -6,7 +6,7 @@
 struct int3 { int x,y,z; };
 #endif
 struct Mesh { std::vector<vec3> positions; std::vector<int3> tris; };
-struct MeshStats { int V=0,E=0,F=0,chi=0,boundary=0,nonmanifold=0; double genus=-1; bool manifold=true; };
+struct MeshStats { int V=0,E=0,F=0,chi=0,boundary=0,nonmanifold=0,components=0; double genus=-1; bool manifold=true; };
 Mesh read_obj(const std::string&);
 void write_obj(const Mesh&,const std::string&);
 MeshStats stats(const Mesh&);

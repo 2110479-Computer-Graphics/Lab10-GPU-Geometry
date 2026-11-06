@@ -57,10 +57,26 @@ int main(int argc, char** argv) { try {
     vec3 tris[3]={{0,0,0},{1,0,0},{0,1,0}}; auto* dp=gpu_alloc<vec3>(points.size()); auto* dt=gpu_alloc<vec3>(3); auto* dm=gpu_alloc<float>(1); auto* ds=gpu_alloc<float>(1); float z=0;
     to_gpu(dp,points.data(),points.size()); to_gpu(dt,tris,3); to_gpu(dm,&z,1); to_gpu(ds,&z,1);
     LAUNCH(distance_kernel,dim3(2),dim3(256),dp,259,dt,1,dm,ds); float mx,sum; from_gpu(&mx,dm,1); from_gpu(&sum,ds,1); gpu_free(dp); gpu_free(dt); gpu_free(dm); gpu_free(ds);
+    bool nearest=near(mx,3) && near(sum,6);
+    std::ostringstream metric_detail; metric_detail<<"259 points max/sum="<<mx<<"/"<<sum;
+    // Each triangle is nearest to a different point. Order must not matter.
+    vec3 pair_points[2]={{.2f,.2f,1},{.2f,.2f,8}};
+    vec3 pair_tris[6]={{0,0,0},{1,0,0},{0,1,0},{0,0,10},{1,0,10},{0,1,10}};
+    dp=gpu_alloc<vec3>(2); dt=gpu_alloc<vec3>(6); dm=gpu_alloc<float>(1); ds=gpu_alloc<float>(1);
+    to_gpu(dp,pair_points,2);
+    for(int order=0;order<2;++order) {
+        if(order) for(int k=0;k<3;++k) std::swap(pair_tris[k],pair_tris[k+3]);
+        to_gpu(dt,pair_tris,6); to_gpu(dm,&z,1); to_gpu(ds,&z,1);
+        LAUNCH(distance_kernel,dim3(1),dim3(256),dp,2,dt,2,dm,ds);
+        from_gpu(&mx,dm,1); from_gpu(&sum,ds,1);
+        nearest=nearest && near(mx,2) && near(sum,3);
+        metric_detail<<"; two triangles "<<(order?"reversed":"forward")<<" max/sum="<<mx<<"/"<<sum<<" (expected 2/3)";
+    }
+    gpu_free(dp); gpu_free(dt); gpu_free(dm); gpu_free(ds);
 #ifdef __CUDACC__
     extern void probe_metric(); probe_metric();
 #endif
-    test("3a",near(mx,3) && near(sum,6),"259 points expected max=3,sum=6; returned "+std::to_string(mx)+","+std::to_string(sum),"Check i<n_points, search all triangles, and atomically add the minimum distance.");
+    test("3a",nearest,metric_detail.str(),"Keep the smallest distance seen for each point as you visit every triangle, then update both atomic totals. Check i<n_points too.");
     std::cout<<passed<<" of "<<total<<" tasks pass\n"; print_tasks(); return passed==total || (cli.has("--ci") && !unfinished.empty()) ? 0 : 1;
 } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; return 2; } }
 

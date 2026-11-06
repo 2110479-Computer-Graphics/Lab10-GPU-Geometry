@@ -79,10 +79,11 @@ Distance judge_one_sided(const Mesh& from,const Mesh& to,int n) {
 Verdict judge_mesh(const Mesh& ref,const Mesh& out) {
     Verdict v; v.topology=stats(out); v.diagonal=bbox_diagonal(ref);
     v.forward=judge_one_sided(ref,out); v.backward=judge_one_sided(out,ref); v.both=two_sided(v.forward,v.backward);
-    v.valid=v.topology.manifold && v.topology.chi==stats(ref).chi && v.both.maximum<=.005*v.diagonal; return v;
+    v.valid=v.topology.manifold && v.topology.components==1 && v.topology.chi==stats(ref).chi && v.both.maximum<=.005*v.diagonal; return v;
 }
 void print_verdict(const Verdict& v) {
     row("Hausdorff",v.both.maximum); row("Hausdorff %",100*v.both.maximum/v.diagonal); row("Mean distance",v.both.mean); row("Mean %",100*v.both.mean/v.diagonal);
     row("Boundary / nonmanifold",std::to_string(v.topology.boundary)+" / "+std::to_string(v.topology.nonmanifold));
+    row("Face components / genus",std::to_string(v.topology.components)+" / "+std::to_string(v.topology.genus));
     row("Competition",v.valid?"VALID":"NOT VALID");
 }

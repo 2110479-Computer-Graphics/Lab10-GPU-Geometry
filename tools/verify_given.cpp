@@ -37,9 +37,16 @@ int main()try{
   { std::ofstream out("out/helper-roundtrip.obj",std::ios::app); out<<"\n  \n# Blank lines are legal.\n"; }
   auto loaded=read_obj("out/helper-roundtrip.obj");require(loaded.positions.size()==4&&loaded.tris.size()==4,"OBJ round trip with blank lines");
   auto st=stats(tetra);require(st.V==4&&st.E==6&&st.F==4&&st.chi==2&&st.boundary==0&&st.nonmanifold==0&&st.manifold,"tetrahedron topology");
-  auto open=tetra;open.tris.pop_back();require(stats(open).boundary==3,"open surface rejected");
+  require(st.components==1&&st.genus==0,"connected closed surface genus");
+  auto disconnected=tetra;
+  for(auto p:tetra.positions)disconnected.positions.push_back(p+vec3{3,0,0});
+  for(auto t:tetra.tris)disconnected.tris.push_back({t.x+4,t.y+4,t.z+4});
+  auto disconnected_stats=stats(disconnected);
+  require(disconnected_stats.manifold&&disconnected_stats.components==2&&disconnected_stats.genus==-1,"disconnected closed surfaces have no single genus");
+  auto open=tetra;open.tris.pop_back();require(stats(open).boundary==3&&stats(open).genus==-1,"open surface rejected");
   auto duplicate=tetra;duplicate.tris.push_back(tetra.tris[0]);require(stats(duplicate).nonmanifold==3&&!stats(duplicate).manifold,"duplicate face rejected");
   auto pinch=tetra;for(int i=1;i<4;++i)pinch.positions.push_back(-tetra.positions[i]);for(auto t:tetra.tris){auto map=[](int i){return i==0?0:i+3;};pinch.tris.push_back({map(t.x),map(t.y),map(t.z)});}require(stats(pinch).boundary==0&&stats(pinch).nonmanifold==0&&!stats(pinch).manifold,"pinched vertex link rejected");
+  require(stats(pinch).components==2&&stats(pinch).genus==-1,"vertex contact does not connect faces");
   auto samples=sample_surface(tetra,997,12345),again=sample_surface(tetra,997,12345);bool repeat=true;for(size_t i=0;i<samples.size();++i)repeat=repeat&&length(samples[i]-again[i])==0;require(repeat,"fixed seed sampling repeats");
   require(fabs(point_triangle_distance({2,0,0},{0,0,0},{1,0,0},{0,1,0})-1)<1e-6,"triangle vertex region");
   require(fabs(point_triangle_distance({.5f,-2,0},{0,0,0},{1,0,0},{0,1,0})-2)<1e-6,"triangle edge region");
